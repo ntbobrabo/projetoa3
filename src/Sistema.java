@@ -13,6 +13,7 @@ public class Sistema {
     private Usuario usuarioLogado;
     private static final String ARQUIVO_OBRAS = "obras.dat";
     private static final String ARQUIVO_USUARIO = "usuario.dat";
+
     public Sistema() {
         obras = new ArrayList<>();
         carregarDados();
@@ -33,6 +34,9 @@ public class Sistema {
             System.out.println("1 - Cadastrar Obra");
             System.out.println("2 - Listar Obras");
             System.out.println("3 - Gerar Relatório");
+            if (usuarioLogado instanceof UsuarioAdmin) {
+                System.out.println("4 - Remover Obra");
+            }
             System.out.println("0 - Sair");
             System.out.print("Opção: ");
             opcao = sc.nextInt();
@@ -42,6 +46,13 @@ public class Sistema {
                 case 1 -> cadastrarObra(sc);
                 case 2 -> listarObras();
                 case 3 -> new Relatorio().gerar(obras);
+                case 4 -> {
+                    if (usuarioLogado instanceof UsuarioAdmin) {
+                        removerObra(sc);
+                    } else {
+                        System.out.println("Opção inválida.");
+                    }
+                }
                 case 0 -> {
                     salvarDados();
                     System.out.println("Sistema encerrado e dados salvos.");
@@ -50,6 +61,7 @@ public class Sistema {
             }
 
         } while (opcao != 0);
+
         sc.close();
     }
 
@@ -59,8 +71,27 @@ public class Sistema {
         String nome = sc.nextLine();
         System.out.print("CPF: ");
         String cpf = sc.nextLine();
-        usuarioLogado = new Usuario(nome, cpf);
-        System.out.println("Usuário registrado com sucesso! Bem-vindo(a), " + nome + ".");
+
+        System.out.print("Tipo de usuário (1 - Comum, 2 - Administrador): ");
+        int tipo = 0;
+        while (tipo != 1 && tipo != 2) {
+            try {
+                tipo = Integer.parseInt(sc.nextLine());
+                if (tipo != 1 && tipo != 2) {
+                    System.out.print("Escolha inválida. Digite 1 para Comum ou 2 para Administrador: ");
+                }
+            } catch (NumberFormatException e) {
+                System.out.print("Entrada inválida. Digite 1 para Comum ou 2 para Administrador: ");
+            }
+        }
+
+        if (tipo == 1) {
+            usuarioLogado = new UsuarioComum(nome, cpf);
+        } else {
+            usuarioLogado = new UsuarioAdmin(nome, cpf);
+        }
+
+        System.out.println("Usuário registrado com sucesso! Bem-vindo(a), " + usuarioLogado.nome + ".");
     }
 
     private void cadastrarObra(Scanner sc) {
@@ -115,6 +146,17 @@ public class Sistema {
         System.out.println("\n--- Obras Cadastradas ---");
         for (Obra obra : obras) {
             System.out.println(obra.getNome());
+        }
+    }
+
+    private void removerObra(Scanner sc) {
+        System.out.print("Nome da obra a remover: ");
+        String nome = sc.nextLine();
+        boolean removido = obras.removeIf(obra -> obra.getNome().equalsIgnoreCase(nome));
+        if (removido) {
+            System.out.println("Obra removida com sucesso.");
+        } else {
+            System.out.println("Obra não encontrada.");
         }
     }
 
